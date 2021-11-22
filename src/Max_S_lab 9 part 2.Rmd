@@ -39,3 +39,42 @@ utst <- lizards %>%
   filter(tail %in% c("B", "W"))
 ```
 
+## Find counts and proportions of lizards with broken or whole tails at each site
+
+```{r}
+utst %>% 
+  count(site, tail)
+```
+
+```{r}
+tail_count <- utst %>% 
+  janitor::tabyl(site, tail)
+
+tail_proportions <- tail_count %>% 
+  janitor::adorn_percentages() %>% 
+  janitor::adorn_pct_formatting(digits = 2) %>% 
+  janitor::adorn_ns()
+# default is to calculate % by rows
+  
+```
+
+## Covert to a contingency table
+
+use `column_to_rowname()`.
+
+```{r}
+lizard_ct <- tail_count %>% 
+  column_to_rownames(var = "site")
+```
+
+## Chi-square
+
+```{r}
+lizard_x2 <- chisq.test(lizard_ct)
+lizard_x2
+
+lizard_tidy <- broom::tidy(lizard_x2)
+```
+Using a significance level of .05, yes we have sufficient evidence to reject null hypothesis so we retain alternative hypothesis that tail size and breakage are not independent. 
+
+There is a significant association (ie. non-independence) between site and lizard tail breakage ($\chi$^2^(`r lizard_tidy$parameter`) = `r lizard_tidy$statistic`, *p* = `r lizard_tidy$p.value`).
